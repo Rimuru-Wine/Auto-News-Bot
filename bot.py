@@ -18,17 +18,17 @@ from module.rss.rss import format_rss_entry, extract_youtube_watch_url
 
 # ─── Logging ───
 logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger("AnimeNewsBot")
+logger = logging.getLogger("TeamWineNewsBot")
 
 # ─── Database ───
 mongo_client = pymongo.MongoClient(MONGO_URI)
-db = mongo_client["AnimeNewsBot"]
+db = mongo_client["TeamWineNewsBot"]
 user_settings_collection = db["user_settings"]
 global_settings_collection = db["global_settings"]
 rss_collection = db["rss_feeds"]
 
 # ─── Pyrogram Client ───
-app = Client("AnimeNewsBot", api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TOKEN)
+app = Client("TeamWineNewsBot", api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TOKEN)
 
 # ─── Webhook Thread ───
 threading.Thread(target=start_webhook, daemon=True).start()
@@ -85,15 +85,15 @@ async def start(client, message):
     username = message.from_user.username or "there"
 
     buttons = InlineKeyboardMarkup([
-        [InlineKeyboardButton("ᴍᴀɪɴ ʜᴜʙ", url="https://t.me/Bots_Nation"),
-         InlineKeyboardButton("ꜱᴜᴩᴩᴏʀᴛ ᴄʜᴀɴɴᴇʟ", url="https://t.me/Bots_Nation_Support")],
-        [InlineKeyboardButton("ᴅᴇᴠᴇʟᴏᴩᴇʀ", url="https://t.me/darkxside78")]
+        [InlineKeyboardButton("ᴍᴀɪɴ ʜᴜʙ", url="https://t.me/Team_Wine"),
+         InlineKeyboardButton("ꜱᴜᴩᴩᴏʀᴛ ᴄʜᴀɴɴᴇʟ", url="https://t.me/Rimuru_wine")],
+        [InlineKeyboardButton("ᴅᴇᴠᴇʟᴏᴩᴇʀ", url="https://t.me/Rimuru_wine")]
     ])
 
     caption = (
         f"<b><blockquote>ʙᴀᴋᴋᴀᴀᴀ {username}!!!\n\n"
-        f"I am an Anime News Bot.\n"
-        f"I fetch anime news from RSS feeds and automatically post to my master's news channel.</b></blockquote>"
+        f"I am Team Wine 🍷 Anime News Bot.\n"
+        f"I fetch anime news from RSS feeds and automatically post to Team Wine 🍷 news channel.</b></blockquote>"
     )
 
     await send_message(chat_id, text=caption, photo=START_PIC, reply_markup=buttons if START_PIC else None)
@@ -162,8 +162,8 @@ async def auto_news_loop():
                     continue
 
                 for position, entry in enumerate(feed.entries):
-                    # Avoid reposting same news
-                    if rss_collection.find_one({"link": rss_link, "entry_id": entry.id if 'id' in entry else entry.link}):
+                    entry_id = entry.id if 'id' in entry else entry.link
+                    if rss_collection.find_one({"link": rss_link, "entry_id": entry_id}):
                         continue
 
                     msg, thumbnail_url, link = await format_rss_entry(entry)
@@ -179,9 +179,8 @@ async def auto_news_loop():
                     except Exception as e:
                         logger.error(f"Error processing video: {e}")
 
-                    # Mark as posted
                     rss_collection.update_one(
-                        {"link": rss_link, "entry_id": entry.id if 'id' in entry else entry.link},
+                        {"link": rss_link, "entry_id": entry_id},
                         {"$set": {"posted_at": datetime.utcnow()}},
                         upsert=True
                     )
