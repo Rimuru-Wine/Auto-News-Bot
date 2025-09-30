@@ -1,0 +1,7 @@
+docker build -t anime-news-bot .
+docker run -d --name anime-news-bot \
+    -e API_ID=123456 \
+    -e API_HASH="your_api_hash" \
+    -e BOT_TOKEN="your_bot_token" \
+    -e MONGO_URI="mongodb://mongo:27017/" \
+    anime-news-bot
